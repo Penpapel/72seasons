@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smooth Color Zoom App</title>
+    <style>
+        /* Basic page layout */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Container for color bars */
+        .color-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: all 5s cubic-bezier(0.4, 0.0, 0.2, 1); /* Smooth zoom animation */
+        }
+
+        /* Individual color bars */
+        .color-bar {
+            height: 100%;
+            transition: all 5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Container for all color bars -->
+    <div id="colorContainer" class="color-container"></div>
+
+    <script>
+        // Custom 72-color sequence
+        const baseColors = [
+            "#ADD8E6", "#90EE90", "#00FFFF", "#8B4513", "#B0C4DE", "#32CD32", "#A52A2A", "#FFB7C5",
+            "#708090", "#87CEEB", "#FFFFFF", "#EE82EE", "#7FFF00", "#F0FFFF", "#FFC0CB", "#228B22",
+            "#8B4513", "#7CFC00", "#FF6347", "#FFD700", "#8B008B", "#32CD32", "#FFD700", "#808080",
+            "#5A4FCF", "#006400", "#8B4513", "#F5DEB3", "#FFB6C1", "#8B4513", "#FFFFFF", "#A0522D",
+            "#778899", "#87CEFA", "#32CD32", "#D3D3D3", "#FFFFFF", "#87CEEB", "#FFD700", "#F0FFF0",
+            "#FFFFE0", "#87CEFA", "#A9A9A9", "#8B4513", "#DEB887", "#FFFFFF", "#FFC300", "#006400",
+            "#F8F8FF", "#D3D3D3", "#FFA500", "#FFC0CB", "#778899", "#FFFF31", "#C0C0C0", "#8B4513",
+            "#FFA500", "#B0C4DE", "#8B4513", "#F5F5F5", "#7CFC00", "#8B4513", "#FFFACD", "#7CFC00",
+            "#00CED1", "#CD853F", "#FFD700", "#00CED1", "#FFFFF0", "#D3D3D3", "#AFDBF5", "#808080"
+        ];
+
+        // Function to interpolate between two colors
+        function interpolateColor(color1, color2, factor) {
+            const c1 = parseInt(color1.slice(1), 16);
+            const c2 = parseInt(color2.slice(1), 16);
+            
+            const r = (c1 >> 16) + factor * (((c2 >> 16) & 0xff) - ((c1 >> 16) & 0xff));
+            const g = ((c1 >> 8) & 0xff) + factor * (((c2 >> 8) & 0xff) - ((c1 >> 8) & 0xff));
+            const b = (c1 & 0xff) + factor * ((c2 & 0xff) - (c1 & 0xff));
+            
+            return `#${(1 << 24 | (r & 0xff) << 16 | (g & 0xff) << 8 | (b & 0xff)).toString(16).slice(1)}`;
+        }
+
+        // Generate 360 interpolated colors
+        const colors = [];
+        for (let i = 0; i < baseColors.length; i++) {
+            const nextColor = baseColors[(i + 1) % baseColors.length];
+            for (let j = 0; j < 5; j++) {
+                colors.push(interpolateColor(baseColors[i], nextColor, j / 5));
+            }
+        }
+
+        // Get today's color based on the day of the year
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), 0, 1); // January 1st
+        const dayOfYear = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+        const colorIndex = dayOfYear % colors.length;
+
+        // Populate color bars
+        const colorContainer = document.getElementById("colorContainer");
+        colors.forEach((color, index) => {
+            const colorBar = document.createElement("div");
+            colorBar.classList.add("color-bar");
+            colorBar.style.backgroundColor = color;
+            colorBar.style.flex = "1"; // Initially equal width for all bars
+            colorContainer.appendChild(colorBar);
+        });
+
+        // Smooth zoom effect on load
+        window.onload = () => {
+            const colorBars = document.querySelectorAll(".color-bar");
+            const totalWidth = 100; // Represents total width in arbitrary units for flexibility
+
+            colorBars.forEach((bar, index) => {
+                // Linear scaling factor based on distance from today's color
+                const distance = Math.abs(index - colorIndex);
+
+                if (index === colorIndex) {
+                    bar.style.flex = `${0.75 * totalWidth}`; // Today's color takes 75% of width
+                } else {
+                    const remainingWidth = 0.25 * totalWidth;
+                    const scaledWidth = remainingWidth / (distance + 1); // Smooth linear scale
+
+                    bar.style.flex = `${scaledWidth}`;
+                }
+            });
+        };
+    </script>
+</body>
+</html>
