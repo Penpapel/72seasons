@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smooth Color Zoom App</title>
+    <title>Cheerful Color Zoom App</title>
     <style>
         /* Basic page layout */
         body, html {
@@ -15,6 +15,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        /* Outer container with border color */
+        .border-container {
+            width: calc(100% - 20px); /* Reduces width by 10px on each side for the border */
+            height: calc(100% - 20px); /* Reduces height by 10px on each side for the border */
+            padding: 150px;
+            box-sizing: border-box;
         }
 
         /* Container for color bars */
@@ -33,21 +41,25 @@
     </style>
 </head>
 <body>
-    <!-- Container for all color bars -->
-    <div id="colorContainer" class="color-container"></div>
+    <!-- Outer container for border effect -->
+    <div id="borderContainer" class="border-container">
+        <!-- Inner container for all color bars -->
+        <div id="colorContainer" class="color-container"></div>
+    </div>
 
     <script>
-        // Custom 72-color sequence
-        const baseColors = [
+        // List of 73 cheerful colors for Japanese micro-seasons
+        const cheerfulColors = [
             "#FFB7C5", "#32CD32", "#87CEEB", "#FFD700", "#FF8C00", "#DC143C", "#D8E7EC", "#E6E6FA",
-    "#A020F0", "#DAA520", "#AFEEEE", "#8FBC8F", "#FFD800", "#FFF5EE", "#00CED1", "#FFB6C1",
-    "#FF4500", "#9ACD32", "#DDA0DD", "#F4A460", "#228B22", "#FFBF00", "#5F9EA0", "#DA70D6",
-    "#FFDA03", "#FFE4E1", "#DAA520", "#FFE5B4", "#FFFFF0", "#4169E1", "#98FB98", "#DC143C",
-    "#C9A0DC", "#FAFAD2", "#FF66B2", "#FFC30B", "#40E0D0", "#C8A2C8", "#01796F", "#DA70D6",
-    "#FFEFD5", "#B0E0E6", "#FFA6C9", "#FFD700", "#9932CC", "#FF7F50", "#CCCCFF", "#FFD700",
-    "#7FFF00", "#4682B4", "#FFC72C", "#E6E6FA", "#FF8C00", "#AFEEEE", "#FFB6C1", "#ADFF2F",
-    "#9400D3", "#D3D3D3", "#FF7F50", "#000080", "#FFBF00", "#FFA500", "#DC143C", "#DDA0DD",
-    "#32CD32", "#B0E0E6", "#CC5500", "#7B68EE", "#FFF44F", "#00FFFF", "#228B22", "#FFFACD"
+            "#A020F0", "#DAA520", "#AFEEEE", "#8FBC8F", "#FFD800", "#FFF5EE", "#00CED1", "#FFB6C1",
+            "#FF4500", "#9ACD32", "#DDA0DD", "#F4A460", "#228B22", "#FFBF00", "#5F9EA0", "#DA70D6",
+            "#FFDA03", "#FFE4E1", "#DAA520", "#FFE5B4", "#FFFFF0", "#4169E1", "#98FB98", "#DC143C",
+            "#C9A0DC", "#FAFAD2", "#FF66B2", "#FFC30B", "#40E0D0", "#C8A2C8", "#01796F", "#DA70D6",
+            "#FFEFD5", "#B0E0E6", "#FFA6C9", "#FFD700", "#9932CC", "#FF7F50", "#CCCCFF", "#FFD700",
+            "#7FFF00", "#4682B4", "#FFC72C", "#E6E6FA", "#FF8C00", "#AFEEEE", "#FFB6C1", "#ADFF2F",
+            "#9400D3", "#D3D3D3", "#FF7F50", "#000080", "#FFBF00", "#FFA500", "#DC143C", "#DDA0DD",
+            "#32CD32", "#B0E0E6", "#CC5500", "#7B68EE", "#FFF44F", "#00FFFF", "#228B22", "#FFFACD",
+            "#E0FFFF" // Added one extra color to complete 73 base colors
         ];
 
         // Function to interpolate between two colors
@@ -55,19 +67,20 @@
             const c1 = parseInt(color1.slice(1), 16);
             const c2 = parseInt(color2.slice(1), 16);
             
-            const r = (c1 >> 16) + factor * (((c2 >> 16) & 0xff) - ((c1 >> 16) & 0xff));
-            const g = ((c1 >> 8) & 0xff) + factor * (((c2 >> 8) & 0xff) - ((c1 >> 8) & 0xff));
-            const b = (c1 & 0xff) + factor * ((c2 & 0xff) - (c1 & 0xff));
+            const r = Math.round((c1 >> 16) + factor * (((c2 >> 16) & 0xff) - ((c1 >> 16) & 0xff)));
+            const g = Math.round(((c1 >> 8) & 0xff) + factor * (((c2 >> 8) & 0xff) - ((c1 >> 8) & 0xff)));
+            const b = Math.round((c1 & 0xff) + factor * ((c2 & 0xff) - (c1 & 0xff)));
             
             return `#${(1 << 24 | (r & 0xff) << 16 | (g & 0xff) << 8 | (b & 0xff)).toString(16).slice(1)}`;
         }
 
-        // Generate 360 interpolated colors
+        // Generate interpolated colors for each pair of consecutive base colors
         const colors = [];
-        for (let i = 0; i < baseColors.length; i++) {
-            const nextColor = baseColors[(i + 1) % baseColors.length];
+        for (let i = 0; i < cheerfulColors.length - 1; i++) {
+            const startColor = cheerfulColors[i];
+            const endColor = cheerfulColors[i + 1];
             for (let j = 0; j < 5; j++) {
-                colors.push(interpolateColor(baseColors[i], nextColor, j / 5));
+                colors.push(interpolateColor(startColor, endColor, j / 5));
             }
         }
 
@@ -76,6 +89,10 @@
         const startDate = new Date(today.getFullYear(), 0, 1); // January 1st
         const dayOfYear = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
         const colorIndex = dayOfYear % colors.length;
+
+        // Set today's color as the background color for the border container
+        const borderContainer = document.getElementById("borderContainer");
+        borderContainer.style.backgroundColor = colors[colorIndex];
 
         // Populate color bars
         const colorContainer = document.getElementById("colorContainer");
